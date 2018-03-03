@@ -34,8 +34,12 @@ let timeout = 5000;
 function processAllBatches(batches){
     let allChunks = [];
     let curChunk = [];
+
+    let success = 0;
+    let fails = 0;
+
     for(let i=1;i<=batches.length;i++){
-        curChunk.push(batches[i]);
+        curChunk.push(batches[i-1]);
 
         if(i%5===0){
             allChunks.push(curChunk);
@@ -46,8 +50,18 @@ function processAllBatches(batches){
     return Promise.resolve(allChunks)
         .map(curChunk => {
             return processBatches(curChunk)
+                .then(result => {
+                    success += result.success;
+                    fails += result.fails
+                })
                 .delay(timeout)
         }, {concurrency: 1})
+        .then(() => {
+            return {
+                fails: fails,
+                success: success
+            }
+        })
 
 }
 
